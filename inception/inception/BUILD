@@ -30,6 +30,16 @@ py_library(
 )
 
 py_library(
+    name = "skin_data",
+    srcs = [
+        "skin_data.py",
+    ],
+    deps = [
+        ":dataset",
+    ],
+)
+
+py_library(
     name = "flowers_data",
     srcs = [
         "flowers_data.py",
@@ -65,6 +75,17 @@ py_binary(
     ],
     deps = [
         ":imagenet_data",
+        ":inception_eval",
+    ],
+)
+
+py_binary(
+    name = "skin_eval",
+    srcs = [
+        "skin_eval.py",
+    ],
+    deps = [
+        ":skin_data",
         ":inception_eval",
     ],
 )
@@ -110,6 +131,17 @@ py_binary(
     deps = [
         ":imagenet_data",
         ":inception_distributed_train",
+    ],
+)
+
+py_binary(
+    name = "skin_train",
+    srcs = [
+        "skin_train.py",
+    ],
+    deps = [
+        ":skin_data",
+        ":inception_train",
     ],
 )
 
