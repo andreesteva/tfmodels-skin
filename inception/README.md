@@ -254,7 +254,7 @@ may construct a an [`Optimizer`]
 (https://www.tensorflow.org/api_docs/python/train.html#optimizers) in TensorFlow
 that constructs the necessary graph for either case diagrammed below from
 TensorFlow [Whitepaper]
-(http://download.tensorflow.org/paper/whitepaper2015.pdf)):
+(http://download.tensorflow.org/paper/whitepaper2015.pdf):
 
 <div style="width:40%; margin:auto; margin-bottom:10px; margin-top:20px;">
   <img style="width:100%"
@@ -583,7 +583,7 @@ FLOWERS_DATA_DIR=/tmp/flowers-data/
 EVAL_DIR=/tmp/flowers_eval/
 
 # Evaluate the fine-tuned model on a hold-out of the flower data set.
-blaze-bin/inception/flowers_eval \
+bazel-bin/inception/flowers_eval \
   --eval_dir="${EVAL_DIR}" \
   --data_dir="${FLOWERS_DATA_DIR}" \
   --subset=validation \
