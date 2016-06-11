@@ -268,6 +268,16 @@ def distort_image(image, height, width, bbox, thread_id=0, scope=None):
     # Randomly distort the colors.
     distorted_image = distort_color(distorted_image, thread_id)
 
+    # Rotate image 90d*Thread_id
+    def rotate90(image):
+        """Adds ops to rotate image 90 degrees. Assumes 3D tensor"""
+        image = tf.image.flip_left_right(image)
+        image = tf.image.transpose_image(image)
+        return image
+
+    for _ in range(thread_id):
+        distorted_image = rotate90(distorted_image)
+
     if not thread_id:
       tf.image_summary('final_distorted_image',
                        tf.expand_dims(distorted_image, 0))

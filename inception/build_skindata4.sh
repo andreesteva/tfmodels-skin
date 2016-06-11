@@ -1,7 +1,7 @@
-TRAIN_DIR=/archive/esteva/skindata4/splits/nine-way/train
+TRAIN_DIR=/archive/esteva/skindata4/splits/nine-way/train-even
 VALIDATION_DIR=/archive/esteva/skindata4/splits/nine-way/test
 LABELS_FILE=/archive/esteva/skindata4/splits/nine-way/labels.txt
-OUTPUT_DIRECTORY=/ssd/esteva/skindata4/nine-way
+OUTPUT_DIRECTORY=/ssd/esteva/tmp-shards/nine-way-even
 
 # build the preprocessing script.
 bazel build inception/build_image_data
