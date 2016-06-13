@@ -1,7 +1,14 @@
 bazel build inception/skin_train
+
+# Original ImageNet Pre-trained Model (don't change this)
 MODEL_PATH="/ssd/esteva/pretrained_models/inception-v3/model.ckpt-157585"
-SKIN_DATA_DIR="/ssd/esteva/skindata4/nine-way"
-TRAIN_DIR="/archive/esteva/experiments/skin_train"
+
+# Dataset to train on (make sure its buffer-filled. Should have *-even in the name)
+SKIN_DATA_DIR="/ssd/esteva/skindata4/nine-way-even"
+
+# Directory to dump results into.
+TRAIN_DIR="/archive/esteva/experiments/skindata4/baseline/train"
+
 
 bazel-bin/inception/skin_train \
   --train_dir="${TRAIN_DIR}" \
