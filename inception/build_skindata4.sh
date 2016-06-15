@@ -1,7 +1,7 @@
-TRAIN_DIR=/archive/esteva/skindata4/splits/nine-way/train-even
-VALIDATION_DIR=/archive/esteva/skindata4/splits/nine-way/test
-LABELS_FILE=/archive/esteva/skindata4/splits/nine-way/labels.txt
-OUTPUT_DIRECTORY=/archive/esteva/tmp-shards/nine-way-even
+TRAIN_DIR=/archive/esteva/skindata4/splits/three-way/train-even
+VALIDATION_DIR=/archive/esteva/skindata4/splits/three-way/test
+LABELS_FILE=/archive/esteva/skindata4/splits/three-way/labels.txt
+OUTPUT_DIRECTORY=/ssd/esteva/skindata4/three-way-even
 
 # build the preprocessing script.
 bazel build inception/build_image_data
@@ -14,7 +14,7 @@ bazel-bin/inception/build_image_data \
   --validation_directory="${VALIDATION_DIR}" \
   --output_directory="${OUTPUT_DIRECTORY}" \
   --labels_file="${LABELS_FILE}" \
-  --train_shards=672 \
+  --train_shards=240 \
   --validation_shards=16 \
   --num_threads=16
 

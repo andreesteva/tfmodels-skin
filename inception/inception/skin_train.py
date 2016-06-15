@@ -19,7 +19,9 @@ from __future__ import division
 from __future__ import print_function
 
 
-
+import glob
+import os
+import numpy as np
 import tensorflow as tf
 
 from inception import inception_train
@@ -32,8 +34,14 @@ def main(_):
   dataset = SkinData(subset=FLAGS.subset)
   assert dataset.data_files()
   if tf.gfile.Exists(FLAGS.train_dir):
-    tf.gfile.DeleteRecursively(FLAGS.train_dir)
-  tf.gfile.MakeDirs(FLAGS.train_dir)
+    files = glob.glob(os.path.join(FLAGS.train_dir, 'model.ckpt-*'))
+    if len(files) > 0:
+      last_iter = np.sort([int(f.split('-')[1].split('.')[0]) for f in files])[-1]
+      FLAGS.pretrained_model_checkpoint_path = os.path.join(
+              FLAGS.train_dir, 'model.ckpt-%d' % last_iter)
+      print('Continuing training from %s' % FLAGS.pretrained_model_checkpoint_path)
+  else:
+    tf.gfile.MakeDirs(FLAGS.train_dir)
   inception_train.train(dataset)
 
 
