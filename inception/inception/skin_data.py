@@ -26,12 +26,13 @@ from inception.dataset import Dataset
 class SkinData(Dataset):
   """Skins data set."""
 
-  def __init__(self, subset):
+  def __init__(self, subset, num_classes):
     super(SkinData, self).__init__('Skin', subset)
+    self._num_classes = num_classes
 
   def num_classes(self):
     """Returns the number of classes in the data set."""
-    return 9
+    return self._num_classes
 
   def num_examples_per_epoch(self):
     """Returns the number of examples in the data subset."""

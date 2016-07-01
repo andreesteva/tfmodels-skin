@@ -16,5 +16,9 @@ bazel-bin/inception/build_image_data \
   --labels_file="${LABELS_FILE}" \
   --train_shards=240 \
   --validation_shards=16 \
-  --num_threads=16
+  --num_threads=16 \
+#  --subset=train
+# use subset to select train or validation. needed for treelearning
+# so that multiple labels files can be passed using multiple calls
+# to this binary
 

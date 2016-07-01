@@ -27,18 +27,25 @@ import tensorflow as tf
 from inception import inception_train
 from inception.skin_data import SkinData
 
+tf.app.flags.DEFINE_string('labels_file', '/archive/esteva/skindata4/splits/nine-way/labels.txt',
+                           """The file with the classnames listed in it.""")
+
 FLAGS = tf.app.flags.FLAGS
 
 
 def main(_):
-  dataset = SkinData(subset=FLAGS.subset)
+# dataset = SkinData(subset=FLAGS.subset)
+  num_classes = len([line for line in open(FLAGS.labels_file).readlines() if line.strip()])
+  dataset = SkinData(subset=FLAGS.subset, num_classes=num_classes)
   assert dataset.data_files()
   if tf.gfile.Exists(FLAGS.train_dir):
     files = glob.glob(os.path.join(FLAGS.train_dir, 'model.ckpt-*'))
     if len(files) > 0:
       last_iter = np.sort([int(f.split('-')[1].split('.')[0]) for f in files])[-1]
+      FLAGS.current_step = last_iter
       FLAGS.pretrained_model_checkpoint_path = os.path.join(
               FLAGS.train_dir, 'model.ckpt-%d' % last_iter)
+      FLAGS.fine_tune = False
       print('Continuing training from %s' % FLAGS.pretrained_model_checkpoint_path)
   else:
     tf.gfile.MakeDirs(FLAGS.train_dir)

@@ -100,6 +100,9 @@ tf.app.flags.DEFINE_integer('num_threads', 2,
 # the file to an integer corresponding to the line number starting from 0.
 tf.app.flags.DEFINE_string('labels_file', '', 'Labels file')
 
+tf.app.flags.DEFINE_string('subset', '',
+                           'Either "train" or "validation", in order to build just that data subset')
+
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -420,10 +423,23 @@ def main(unused_argv):
   print('Saving results to %s' % FLAGS.output_directory)
 
   # Run it!
-  _process_dataset('validation', FLAGS.validation_directory,
-                   FLAGS.validation_shards, FLAGS.labels_file)
-  _process_dataset('train', FLAGS.train_directory,
-                   FLAGS.train_shards, FLAGS.labels_file)
+  if FLAGS.subset:
+      if FLAGS.subset == 'train':
+          directory = FLAGS.train_directory
+          num_shards = FLAGS.train_shards
+      elif FLAGS.subset == 'validation':
+          directory = FLAGS.validation_directory
+          num_shards = FLAGS.validation_shards
+      else:
+          raise ValueError('Data subset must be either train or validation, currently %s' % FLAGS.subset)
+
+      _process_dataset(FLAGS.subset, directory,
+                       num_shards, FLAGS.labels_file)
+  else:
+      _process_dataset('validation', FLAGS.validation_directory,
+                       FLAGS.validation_shards, FLAGS.labels_file)
+      _process_dataset('train', FLAGS.train_directory,
+                       FLAGS.train_shards, FLAGS.labels_file)
 
 
 if __name__ == '__main__':

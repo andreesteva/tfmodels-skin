@@ -37,6 +37,8 @@ tf.app.flags.DEFINE_string('eval_dir', '/archive/esteva/experiments/skindata4/ba
                            """Directory where to write event logs.""")
 tf.app.flags.DEFINE_string('checkpoint_dir', '/archive/esteva/experiments/skindata4/baseline/train',
                            """Directory where to read model checkpoints.""")
+tf.app.flags.DEFINE_string('labels_file', '/archive/esteva/skindata4/splits/nine-way/labels.txt',
+                           """The file with the classnames listed in it.""")
 
 # Flags governing the frequency of the eval.
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 5,
@@ -50,8 +52,6 @@ tf.app.flags.DEFINE_integer('num_examples', 14712,
                             """validation dataset contains 14712 examples.""")
 tf.app.flags.DEFINE_string('subset', 'validation',
                            """Either 'validation' or 'train'.""")
-tf.app.flags.DEFINE_string('labels_file', '/archive/esteva/skindata4/splits/nine-way/labels.txt',
-                           """The file with the classnames listed in it.""")
 
 
 def _eval_once(saver, summary_writer, top_1_op, softmax_op, labels_op, summary_op, num_classes):
@@ -122,8 +122,14 @@ def _eval_once(saver, summary_writer, top_1_op, softmax_op, labels_op, summary_o
                                 examples_per_sec, sec_per_batch))
           start_time = time.time()
 
+      # Remove background class
+#     acc_per_class = 1.0 * correct_per_class[1:] / count_per_class[1:]
       acc_per_class = 1.0 * correct_per_class / count_per_class
-      mean_accuracy = np.mean(acc_per_class[1:])
+      acc_per_class = acc_per_class[1:]
+      print(acc_per_class)
+      print(correct_per_class)
+      print(count_per_class)
+      mean_accuracy = np.mean(acc_per_class)
       print('Mean Accuracy Per Class: %0.3f' % mean_accuracy)
       print('Per class accuracies:')
       classnames = [line.strip() for line in tf.gfile.FastGFile(FLAGS.labels_file).readlines()]
@@ -187,7 +193,8 @@ def evaluate(dataset):
 
 
 def main(unused_argv=None):
-  dataset = SkinData(subset=FLAGS.subset)
+  num_classes = len([line for line in open(FLAGS.labels_file).readlines() if line.strip()])
+  dataset = SkinData(subset=FLAGS.subset, num_classes=num_classes)
   assert dataset.data_files()
   if tf.gfile.Exists(FLAGS.eval_dir):
     tf.gfile.DeleteRecursively(FLAGS.eval_dir)

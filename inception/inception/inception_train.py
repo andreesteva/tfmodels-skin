@@ -331,7 +331,12 @@ def train(dataset):
         FLAGS.train_dir,
         graph_def=sess.graph.as_graph_def(add_shapes=True))
 
-    for step in xrange(FLAGS.max_steps):
+    if hasattr(FLAGS, 'current_step'):
+        current_step = FLAGS.current_step
+    else:
+        current_step = 0
+
+    for step in xrange(current_step, FLAGS.max_steps):
       start_time = time.time()
       _, loss_value = sess.run([train_op, loss])
       duration = time.time() - start_time
