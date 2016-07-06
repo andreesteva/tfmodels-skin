@@ -30,6 +30,9 @@ from inception import image_processing
 from inception import inception_model as inception
 from inception.skin_data import SkinData
 
+import lib
+from lib.learning import clumping_utils as cu
+
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -52,6 +55,19 @@ tf.app.flags.DEFINE_integer('num_examples', 14712,
                             """validation dataset contains 14712 examples.""")
 tf.app.flags.DEFINE_string('subset', 'validation',
                            """Either 'validation' or 'train'.""")
+
+tf.app.flags.DEFINE_string('mapping_file',
+                           '',
+                           """Defines a mapping from train to validation indicating how classes will be merged."""
+                           """If this is specified, we sum probabilities to the validation class level."""
+                           """Entries in this file must be of the form:
+                                [validation-class-0] [training-class-0]
+                                [validation-class-0] [training-class-1]
+                                [validation-class-0] [training-class-2]
+                                [validation-class-1] [training-class-3]
+                                ...
+                           """
+                           )
 
 
 def _eval_once(saver, summary_writer, top_1_op, softmax_op, labels_op, summary_op, num_classes):
@@ -102,11 +118,21 @@ def _eval_once(saver, summary_writer, top_1_op, softmax_op, labels_op, summary_o
       step = 0
       correct_per_class = np.zeros(num_classes)
       count_per_class = np.zeros(num_classes)
+      if FLAGS.mapping_file:
+          mapping = ['__unused_background_class__ __unused_background_class']
+          _mapping = [line.strip() for line in open(FLAGS.mapping_file).readlines()]
+          mapping.extend(_mapping)
+          val_classes = np.unique([m.split()[0] for m in mapping])
+          num_val_classes = len(val_classes)
+          correct_per_class = np.zeros(num_val_classes)
+          count_per_class = np.zeros(num_val_classes)
 
       print('%s: starting evaluation on (%s).' % (datetime.now(), FLAGS.subset))
       start_time = time.time()
       while step < num_iter and not coord.should_stop():
         top_1, softmax, labels = sess.run([top_1_op, softmax_op, labels_op])
+        if FLAGS.mapping_file:
+            softmax = cu.mergeProbabilities(softmax, mapping)
         preds = np.argmax(softmax, axis=1)
         for ll, p in zip(labels, preds):
           count_per_class[ll] += 1
@@ -123,7 +149,6 @@ def _eval_once(saver, summary_writer, top_1_op, softmax_op, labels_op, summary_o
           start_time = time.time()
 
       # Remove background class
-#     acc_per_class = 1.0 * correct_per_class[1:] / count_per_class[1:]
       acc_per_class = 1.0 * correct_per_class / count_per_class
       acc_per_class = acc_per_class[1:]
       print(acc_per_class)
@@ -132,7 +157,10 @@ def _eval_once(saver, summary_writer, top_1_op, softmax_op, labels_op, summary_o
       mean_accuracy = np.mean(acc_per_class)
       print('Mean Accuracy Per Class: %0.3f' % mean_accuracy)
       print('Per class accuracies:')
-      classnames = [line.strip() for line in tf.gfile.FastGFile(FLAGS.labels_file).readlines()]
+      if FLAGS.mapping_file:
+          classnames = val_classes[1:]
+      else:
+          classnames = [line.strip() for line in tf.gfile.FastGFile(FLAGS.labels_file).readlines()]
       for e, name in zip(acc_per_class, classnames):
         print('%0.3f %s' % (e, name))
 
@@ -196,6 +224,15 @@ def main(unused_argv=None):
   num_classes = len([line for line in open(FLAGS.labels_file).readlines() if line.strip()])
   dataset = SkinData(subset=FLAGS.subset, num_classes=num_classes)
   assert dataset.data_files()
+  if FLAGS.mapping_file:
+      print('Using mapping file %s' % FLAGS.mapping_file)
+      mapping = [line.strip().split()[1] for line in open(FLAGS.mapping_file).readlines()]
+      synset = [line.strip() for line in open(FLAGS.labels_file).readlines()]
+      assert len(mapping) == len(synset), \
+              'Length of mapping & synset do not match: %s, %s' % (FLAGS.mapping_file, FLAGS.labels_file)
+      for i, (m,s) in enumerate(zip(mapping, synset)):
+          assert m == s, 'Mapping issue entry %d, %s is not %s' % (i, m, s)
+
   if tf.gfile.Exists(FLAGS.eval_dir):
     tf.gfile.DeleteRecursively(FLAGS.eval_dir)
   tf.gfile.MakeDirs(FLAGS.eval_dir)
