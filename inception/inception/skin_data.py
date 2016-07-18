@@ -39,7 +39,8 @@ class SkinData(Dataset):
 
     # For Connected Components Experiment (without edinburgh, and with epic_)
     if self.subset == 'train':
-      return 111374
+      return 122000
+#     return 111374
     if self.subset == 'validation':
       return 14712
 
