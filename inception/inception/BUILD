@@ -91,6 +91,18 @@ py_binary(
 )
 
 py_binary(
+    name = "skin_test",
+    srcs = [
+        "skin_test.py",
+    ],
+    deps = [
+        ":skin_data",
+        ":image_processing",
+        ":inception",
+    ],
+)
+
+py_binary(
     name = "flowers_eval",
     srcs = [
         "flowers_eval.py",

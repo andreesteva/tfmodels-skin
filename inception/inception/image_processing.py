@@ -71,7 +71,9 @@ tf.app.flags.DEFINE_integer('input_queue_memory_factor', 16,
                             """comments in code for more details.""")
 
 
-def inputs(dataset, batch_size=None, num_preprocess_threads=None):
+def inputs(dataset, batch_size=None, num_preprocess_threads=None,
+        return_filenames=False
+        ):
   """Generate batches of ImageNet images for evaluation.
 
   Use this function as the inputs for evaluating a network.
@@ -96,12 +98,18 @@ def inputs(dataset, batch_size=None, num_preprocess_threads=None):
   # Force all input processing onto CPU in order to reserve the GPU for
   # the forward inference and back-propagation.
   with tf.device('/cpu:0'):
-    images, labels = batch_inputs(
+    batches = batch_inputs(
         dataset, batch_size, train=False,
+        return_filenames=return_filenames,
         num_preprocess_threads=num_preprocess_threads,
         num_readers=1)
 
-  return images, labels
+  if return_filenames:
+      images, labels, filenames = batches
+      return images, labels, filenames
+  else:
+      images, labels = batches
+      return images, labels
 
 
 def distorted_inputs(dataset, batch_size=None, num_preprocess_threads=None):
@@ -386,6 +394,8 @@ def parse_example_proto(example_serialized):
                                               default_value=-1),
       'image/class/text': tf.FixedLenFeature([], dtype=tf.string,
                                              default_value=''),
+      'image/filename': tf.FixedLenFeature([], dtype=tf.string,
+                                             default_value=''),
   }
   sparse_float32 = tf.VarLenFeature(dtype=tf.float32)
   # Sparse features in Example proto.
@@ -411,11 +421,11 @@ def parse_example_proto(example_serialized):
   bbox = tf.expand_dims(bbox, 0)
   bbox = tf.transpose(bbox, [0, 2, 1])
 
-  return features['image/encoded'], label, bbox, features['image/class/text']
+  return features['image/encoded'], label, bbox, features['image/filename']
 
 
 def batch_inputs(dataset, batch_size, train, num_preprocess_threads=None,
-                 num_readers=1):
+                 num_readers=1, return_filenames=False):
   """Contruct batches of training or evaluation examples from the image dataset.
 
   Args:
@@ -493,18 +503,25 @@ def batch_inputs(dataset, batch_size, train, num_preprocess_threads=None,
       reader = dataset.reader()
       _, example_serialized = reader.read(filename_queue)
 
-    images_and_labels = []
+    images_and_stuff = []
     for thread_id in range(num_preprocess_threads):
       # Parse a serialized Example proto to extract the image and metadata.
-      image_buffer, label_index, bbox, _ = parse_example_proto(
+      image_buffer, label_index, bbox, filename = parse_example_proto(
           example_serialized)
       image = image_preprocessing(image_buffer, bbox, train, thread_id)
-      images_and_labels.append([image, label_index])
+      if return_filenames:
+          images_and_stuff.append([image, label_index, filename])
+      else:
+          images_and_stuff.append([image, label_index])
 
-    images, label_index_batch = tf.train.batch_join(
-        images_and_labels,
+    batches = tf.train.batch_join(
+        images_and_stuff,
         batch_size=batch_size,
         capacity=2 * num_preprocess_threads * batch_size)
+    if return_filenames:
+        images, label_index_batch, filename_batch = batches
+    else:
+        images, label_index_batch = batches
 
     # Reshape images into these desired dimensions.
     height = FLAGS.image_size
@@ -517,4 +534,9 @@ def batch_inputs(dataset, batch_size, train, num_preprocess_threads=None,
     # Display the training images in the visualizer.
     tf.image_summary('images', images)
 
-    return images, tf.reshape(label_index_batch, [batch_size])
+    if return_filenames:
+        return (images,
+                tf.reshape(label_index_batch, [batch_size]),
+                tf.reshape(filename_batch, [batch_size]))
+    else:
+        return images, tf.reshape(label_index_batch, [batch_size])

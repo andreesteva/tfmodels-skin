@@ -69,6 +69,7 @@ class Dataset(object):
     """Prints a download message for the Dataset."""
     pass
 
+  # TODO: Update this to include 'test' and adjust shard building for it.
   def available_subsets(self):
     """Returns the list of available subsets."""
     return ['train', 'validation']

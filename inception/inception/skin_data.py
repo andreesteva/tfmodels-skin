@@ -37,10 +37,13 @@ class SkinData(Dataset):
   def num_examples_per_epoch(self):
     """Returns the number of examples in the data subset."""
 
-    # For Connected Components Experiment (without edinburgh, and with epic_)
+    # Production Network training
+    if self.subset == 'train':
+      return 790479
+
+    # For skindata4 connected components
     if self.subset == 'train':
       return 122000
-#     return 111374
     if self.subset == 'validation':
       return 14712
 
