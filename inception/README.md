@@ -94,7 +94,7 @@ DATA_DIR=$HOME/imagenet-data
 bazel build inception/download_and_preprocess_imagenet
 
 # run it
-bazel-bin/inception/download_and_preprocess_imagenet "${DATA_DIR}$"
+bazel-bin/inception/download_and_preprocess_imagenet "${DATA_DIR}"
 ```
 
 The final line of the output script should read:
@@ -477,7 +477,9 @@ and `validation-?????-of-00001`, respectively.
 you will need to invoke [`build_image_data.py`](inception/data/build_image_data.py) on
 your custom data set. Please see the associated options and assumptions behind
 this script by reading the comments section of [`build_image_data.py`]
-(inception/data/build_image_data.py).
+(inception/data/build_image_data.py). Also, if your custom data has a different 
+number of examples or classes, you need to change the appropriate values in
+[`imagenet_data.py`](inception/imagenet_data.py).
 
 The second piece you will need is a trained Inception v3 image model. You have
 the option of either training one yourself (See [How to Train from Scratch]
@@ -664,7 +666,7 @@ bazel-bin/inception/build_image_data \
 ```
 
 where the `$OUTPUT_DIRECTORY` is the location of the sharded `TFRecords`. The
-`$LABELS_FILE` will be a text file that is outputted by the script that provides
+`$LABELS_FILE` will be a text file that is read by the script that provides
 a list of all of the labels. For instance, in the case flowers data set, the
 `$LABELS_FILE` contained the following data:
 
@@ -699,8 +701,12 @@ and
 
 where 24 and 8 are the number of shards specified for each dataset,
 respectively. Generally speaking, we aim for selecting the number of shards such
-that roughly 1024 images reside in each shard. One this data set is built you
+that roughly 1024 images reside in each shard. Once this data set is built, you
 are ready to train or fine-tune an Inception model on this data set.
+
+Note, if you are piggy backing on the flowers retraining scripts, be sure to 
+update `num_classes()` and `num_examples_per_epoch()` in `flowers_data.py` 
+to correspond with your data.
 
 ## Practical Considerations for Training a Model
 
