@@ -264,7 +264,10 @@ def _process_image_files_batch(coder, thread_index, ranges, name, filenames,
       label = labels[i]
       text = texts[i]
 
-      image_buffer, height, width = _process_image(filename, coder)
+      try:
+          image_buffer, height, width = _process_image(filename, coder)
+      except:
+          open('/tmp/sharding_fail/%s' % filename)
 
       example = _convert_to_example(filename, image_buffer, label,
                                     text, height, width)

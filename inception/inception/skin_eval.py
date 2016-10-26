@@ -118,7 +118,8 @@ def _eval_once(saver, summary_writer, top_1_op, softmax_op, labels_op, summary_o
       while step < num_iter and not coord.should_stop():
         top_1, softmax, labels = sess.run([top_1_op, softmax_op, labels_op])
         if FLAGS.mapping_file:
-            softmax = cu.mergeProbabilities(softmax, mapping)
+            softmax = cu.mergeProbabilities(
+                    softmax, mapping, ignore_classes=['__unused_background_class__'])
         preds = np.argmax(softmax, axis=1)
         for ll, p in zip(labels, preds):
           count_per_class[ll] += 1

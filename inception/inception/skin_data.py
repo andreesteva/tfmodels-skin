@@ -18,10 +18,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
-
+import tensorflow as tf
 from inception.dataset import Dataset
 
+FLAGS = tf.app.flags.FLAGS
+tf.app.flags.DEFINE_integer('N_train', 122000,
+                            """Number of training examples to run."""
+                            """Be sure to set to amount in train-even."""
+                            """For production network use 790479"""
+                            )
+tf.app.flags.DEFINE_integer('N_val', 14712,
+                            """Number of validation examples to run."""
+                            """14712 if for the connected components split.""")
 
 class SkinData(Dataset):
   """Skins data set."""
@@ -37,15 +45,11 @@ class SkinData(Dataset):
   def num_examples_per_epoch(self):
     """Returns the number of examples in the data subset."""
 
-    # Production Network training
-    if self.subset == 'train':
-      return 790479
-
     # For skindata4 connected components
     if self.subset == 'train':
-      return 122000
+      return FLAGS.N_train
     if self.subset == 'validation':
-      return 14712
+      return FLAGS.N_val
 
   def download_message(self):
     """Instruction for skin dataset."""
